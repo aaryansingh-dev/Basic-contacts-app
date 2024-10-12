@@ -33,61 +33,61 @@ class ContactViewModel(val dao: ContactDao): ViewModel() {
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ContactState())
 
     fun onEvent(event: ContactEvent)
-    {
-        when(event){
-            is ContactEvent.DeleteContact ->
-                {
-                    viewModelScope.launch {
-                        dao.deleteContact(event.contact)
+        {
+            when(event){
+                is ContactEvent.DeleteContact ->
+                    {
+                        viewModelScope.launch {
+                            dao.deleteContact(event.contact)
+                        }
                     }
+                ContactEvent.HideDialog ->
+                {
+                    _state.update { it.copy(isAddingContact = false) }
                 }
-            ContactEvent.HideDialog ->
-            {
-                _state.update { it.copy(isAddingContact = false) }
-            }
-            ContactEvent.SaveContact ->
-                {
-                    val firstName = state.value.firstName
-                    val lastName  = state.value.lastName
-                    val phoneNumber = state.value.phoneNumber
+                ContactEvent.SaveContact ->
+                    {
+                        val firstName = state.value.firstName
+                        val lastName  = state.value.lastName
+                        val phoneNumber = state.value.phoneNumber
 
-                    if(firstName.isBlank() || lastName.isBlank() || phoneNumber.isBlank()){return}
+                        if(firstName.isBlank() || lastName.isBlank() || phoneNumber.isBlank()){return}
 
-                    val contact = Contact(
-                        firstName = firstName,
-                        lastName = lastName,
-                        phoneNumber = phoneNumber
-                    )
-
-                    viewModelScope.launch {
-                        dao.upsertContact(contact)
-                    }
-
-                    _state.update {
-                        it.copy(
-                            firstName = "",
-                            lastName = "",
-                            phoneNumber = "",
-                            isAddingContact = false
+                        val contact = Contact(
+                            firstName = firstName,
+                            lastName = lastName,
+                            phoneNumber = phoneNumber
                         )
+
+                        viewModelScope.launch {
+                            dao.upsertContact(contact)
+                        }
+
+                        _state.update {
+                            it.copy(
+                                firstName = "",
+                                lastName = "",
+                                phoneNumber = "",
+                                isAddingContact = false
+                            )
+                        }
                     }
+                is ContactEvent.SetFirstName -> {
+                    _state.update { it.copy(firstName = event.firstName) }
                 }
-            is ContactEvent.SetFirstName -> {
-                _state.update { it.copy(firstName = event.firstName) }
-            }
-            is ContactEvent.SetLastName -> {
-                _state.update { it.copy(lastName = event.lastName) }
-            }
-            is ContactEvent.SetPhoneNumber -> {
-                _state.update { it.copy(phoneNumber = event.phoneNumber) }
-            }
-            ContactEvent.ShowDialog -> {
-                _state.update { it.copy(isAddingContact = true) }
-            }
-            is ContactEvent.SortContacts ->
-                {
-                    _sortType.value = event.sortType
+                is ContactEvent.SetLastName -> {
+                   _state.update { it.copy(lastName = event.lastName) }
                 }
+                is ContactEvent.SetPhoneNumber -> {
+                    _state.update { it.copy(phoneNumber = event.phoneNumber) }
+                }
+                ContactEvent.ShowDialog -> {
+                    _state.update { it.copy(isAddingContact = true) }
+                }
+                is ContactEvent.SortContacts ->
+                    {
+                        _sortType.value = event.sortType
+                    }
         }
     }
 }
